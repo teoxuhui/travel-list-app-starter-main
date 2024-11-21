@@ -13,7 +13,6 @@ function Form({ onAddItem }) {
   const [description, setDescription] = useState(""); 
   const [quantity, setQuantity] = useState(1); 
 
-  
   function handleSubmit(e) {
     e.preventDefault();
 
