@@ -1,119 +1,77 @@
 import React, { useState } from "react";
+import Logo from "./Logo";
+import Form from "./Form";
+import PackingList from "./PackingList";
+import Stats from "./Stat";
 
 const initialItems = [
   { id: 1, description: "Shirt", quantity: 5, packed: false },
   { id: 2, description: "Pants", quantity: 2, packed: false },
 ];
 
-function Logo() {
-  return <h1>My Travel List</h1>;
-}
-
-function Form({ onAddItem }) {
-  const [description, setDescription] = useState(""); 
-  const [quantity, setQuantity] = useState(1); 
-
-  function handleSubmit(e) {
-    e.preventDefault();
-
-  
-    if (!description) return;
-
-    
-    const newItem = {
-      id: Date.now(),
-      description: description,
-      quantity: quantity,
-      packed: false, 
-    };
-
-    
-    onAddItem(newItem);
-
-    setDescription(""); 
-    setQuantity(1); 
-  }
-
-  return (
-    <form className="add-form" onSubmit={handleSubmit}>
-      <h3>What do you need to pack?</h3>
-      <select
-        value={quantity}
-        onChange={(e) => setQuantity(Number(e.target.value))}
-        style={{ margin: "5px", padding: "5px" }}
-      >
-        <option value={1}>1</option>
-        <option value={2}>2</option>
-        <option value={3}>3</option>
-      </select>
-      <input
-        type="text"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Item..."
-        style={{ margin: "5px", padding: "5px" }}
-      />
-      <button type="submit" style={{ margin: "5px", padding: "5px" }}>
-        Add
-      </button>
-    </form>
-  );
-}
-
-function PackingList({ items }) {
-  return (
-    <div className="list">
-      <ul>
-        {items.map((item) => (
-          <Item key={item.id} item={item} />
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function Item({ item }) {
-  return (
-    <li
-      style={{
-        textDecoration: item.packed ? "line-through" : "none",
-        margin: "5px",
-      }}
-    >
-      {item.description} ({item.quantity})
-    </li>
-  );
-}
-
-function Stats({ items }) {
-  const totalItems = items.length;
-  const packedItems = items.filter((item) => item.packed).length;
-  const packedPercentage = totalItems
-    ? Math.round((packedItems / totalItems) * 100)
-    : 0;
-
-  return (
-    <footer className="stats">
-      <em>
-        You have {totalItems} items in the list. You already packed {packedItems}{" "}
-        ({packedPercentage}%).
-      </em>
-    </footer>
-  );
-}
-
 function App() {
   const [items, setItems] = useState(initialItems);
+  const [searchQuery, setSearchQuery] = useState("");
 
   function handleAddItem(newItem) {
-    setItems((prevItems) => [...prevItems, newItem]); 
+    setItems((prevItems) => [...prevItems, newItem]);
   }
+
+  const handleDeleteItem = (itemId) => {
+    setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+  };
+
+  const handleUpdateItem = (itemId) => {
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === itemId ? { ...item, packed: !item.packed } : item
+      )
+    );
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  const handleSort = (sortOption) => {
+    const sortedItems = [...items];
+    if (sortOption === "az") {
+      sortedItems.sort((a, b) => a.description.localeCompare(b.description));
+    } else if (sortOption === "za") {
+      sortedItems.sort((a, b) => b.description.localeCompare(a.description));
+    } else if (sortOption === "description") {
+      sortedItems.sort((a, b) => a.description.length - b.description.length);
+    } else if (sortOption === "packed") {
+      sortedItems.sort((a, b) => a.packed - b.packed);
+    } else {
+      sortedItems.sort((a, b) => a.id - b.id); // Input order
+    }
+    setItems(sortedItems);
+  };
+
+  const handleClear = () => {
+    const confirmClear = window.confirm(
+      "Are you sure you want to clear all items?"
+    );
+    if (confirmClear) {
+      setItems([]); 
+      alert("All items cleared!");
+    }
+  };
 
   return (
     <div className="app">
       <Logo />
-      <Form onAddItem={handleAddItem} /> 
-      <PackingList items={items} />
+      <Form onAddItem={handleAddItem} onClear={handleClear} />
+      <PackingList
+        items={items}
+        searchQuery={searchQuery}
+        onSearch={handleSearch}
+        onSort={handleSort}
+        onClear={handleClear}
+        onDeleteItem={handleDeleteItem}
+        onUpdateItem={handleUpdateItem}
+      />
       <Stats items={items} />
     </div>
   );
